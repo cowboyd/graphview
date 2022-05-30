@@ -22,7 +22,12 @@ function createView(graph: Graph) {
   return Object.entries(graph.roots).reduce((view, [name, root]) => {
     return {
       ...view,
-      [name]: Object.values(root).map(v => createVertexView(v, graph))
+      [name]: Object.values(root).reduce((entries, v) => {
+        return {
+          ...entries,
+          [v.id]: createVertexView(v, graph),
+        }
+      }, {} as Record<number, VertexView>)
     };
   }, {});
 }
