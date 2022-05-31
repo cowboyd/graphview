@@ -46,7 +46,7 @@ function createVertexView(vertex: Vertex, graph: Graph) {
     attributes: vertex.data,
   };
 
-  let edges = graph.from[vertex.id];
+  let edges = (graph.from[vertex.id] ?? []).concat(graph.to[vertex.id] ?? []);
   if (edges) {
     return {
       ...view,
@@ -56,8 +56,16 @@ function createVertexView(vertex: Vertex, graph: Graph) {
             ...properties,
             [edge.type]: {
               enumerable: true,
-              get(): VertexView[] {
-                return edges.filter(e => e.type === edge.type).map(({ to }) => createVertexView(graph.vertices[to], graph));
+              get(): Record<number, VertexView> {
+                return edges
+                  .filter(e => e.type === edge.type)
+                  .reduce((views, edge) => {
+                    let targetId = vertex.id === edge.from ? edge.to : edge.from;
+                    return {
+                      ...views,
+                      [targetId]: createVertexView(graph.vertices[targetId], graph),
+                    };
+                  }, {});
               }
             }
           }
